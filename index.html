@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#1a1a2e" />
+  <meta name="theme-color" content="#ffffff" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="manifest" href="/manifest.json" />
@@ -13,8 +13,8 @@
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #1a1a2e;
-      color: #eee;
+      background: #f5f5f5;
+      color: #222;
       overflow: hidden;
       height: 100dvh;
       width: 100vw;
@@ -32,23 +32,23 @@
     }
     #welcome h1 {
       font-size: 2rem;
-      color: #e2e2e2;
+      color: #222;
     }
     #welcome .subtitle {
       color: #888;
       font-size: 0.95rem;
     }
     .btn-open {
-      background: #0f3460;
-      color: #eee;
-      border: 2px solid #533483;
+      background: #fff;
+      color: #333;
+      border: 2px solid #ccc;
       border-radius: 12px;
       padding: 14px 36px;
       font-size: 1.1rem;
       cursor: pointer;
       transition: background 0.2s;
     }
-    .btn-open:active { background: #533483; }
+    .btn-open:active { background: #d0d0d0; color: #333; }
 
     /* ===== Toolbar ===== */
     #toolbar {
@@ -57,8 +57,8 @@
       top: 0; left: 0; right: 0;
       z-index: 100;
       height: 48px;
-      background: #16213e;
-      border-bottom: 1px solid #333;
+      background: #fff;
+      border-bottom: 1px solid #ddd;
       align-items: center;
       padding: 0 8px;
       gap: 6px;
@@ -66,7 +66,7 @@
     #toolbar .filename {
       flex: 1;
       font-size: 0.85rem;
-      color: #aaa;
+      color: #555;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -75,7 +75,7 @@
     .tbtn {
       background: none;
       border: none;
-      color: #ccc;
+      color: #333;
       font-size: 1.3rem;
       padding: 8px;
       cursor: pointer;
@@ -87,10 +87,10 @@
       align-items: center;
       justify-content: center;
     }
-    .tbtn:active { background: #333; }
+    .tbtn:active { background: #e0e0e0; }
     .tbtn.active {
-      background: #533483;
-      color: #fff;
+      background: #d0d0d0;
+      color: #333;
     }
 
     /* Rotation icon */
@@ -105,7 +105,7 @@
       top: 48px; left: 0; right: 0; bottom: 0;
       overflow: auto;
       -webkit-overflow-scrolling: touch;
-      background: #0f0f1a;
+      background: #e0e0e0;
       touch-action: pan-x pan-y; /* allow scroll but prevent browser zoom */
     }
     #pdf-container {
@@ -119,7 +119,7 @@
       display: block;
       width: 100%;
       height: 100%;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+      box-shadow: 0 1px 6px rgba(0,0,0,0.15);
     }
 
     /* Horizontal layout when rotated 90° */
@@ -141,14 +141,13 @@
   <!-- Welcome screen -->
   <div id="welcome">
     <h1>📄 PDFer</h1>
-    <p class="subtitle">PDF-просмотрщик с запоминанием позиции</p>
-    <button class="btn-open" id="btn-open">Открыть PDF</button>
+    <button class="btn-open" id="btn-open">Open PDF</button>
     <input type="file" id="file-input" accept="application/pdf" hidden />
   </div>
 
   <!-- Toolbar -->
   <div id="toolbar">
-    <button class="tbtn" id="btn-rotate" title="Повернуть на 90°">
+    <button class="tbtn" id="btn-rotate" title="Rotate 90°">
       <svg class="rotate-icon ccw" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <!-- CCW: left vertical + top horizontal with arrow → (top-left corner) -->
         <g class="ccw-group">
@@ -164,9 +163,9 @@
         </g>
       </svg>
     </button>
-    <button class="tbtn" id="btn-lock" title="Блокировка горизонтального скролла">🔒</button>
+    <button class="tbtn" id="btn-lock" title="Lock horizontal scroll">🔒</button>
     <span class="filename" id="filename"></span>
-    <button class="tbtn" id="btn-open2" title="Открыть другой файл">📂</button>
+    <button class="tbtn" id="btn-open2" title="Open another file">📂</button>
   </div>
 
   <!-- PDF viewport -->

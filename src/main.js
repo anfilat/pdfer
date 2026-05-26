@@ -151,9 +151,9 @@ function updateLockButton() {
   btnLock.classList.toggle('active', horizontalLock);
   btnLock.textContent = horizontalLock ? '🔏' : '🔓';
   if (viewer.isHorizontal) {
-    btnLock.title = horizontalLock ? 'Вертикальный скролл заблокирован' : 'Вертикальный скролл разблокирован';
+    btnLock.title = horizontalLock ? 'Vertical scroll locked' : 'Vertical scroll unlocked';
   } else {
-    btnLock.title = horizontalLock ? 'Горизонтальный скролл заблокирован' : 'Горизонтальный скролл разблокирован';
+    btnLock.title = horizontalLock ? 'Horizontal scroll locked' : 'Horizontal scroll unlocked';
   }
 }
 
