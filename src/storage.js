@@ -2,7 +2,7 @@
 
 /**
  * Key: pdf:<filename>:<filesize>
- * Value: { scrollTop, scrollLeft, rotation, scale, horizontalLock }
+ * Value: { scrollTop, scrollLeft, rotation, scale, scrollLock }
  */
 
 function storageKey(file) {

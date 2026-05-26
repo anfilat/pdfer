@@ -9,7 +9,7 @@ PWA PDF viewer optimised for Android phones. Core features:
 - Rotate PDF 0° ↔ 90° (native PDF.js rotation, not CSS transform)
 - Pinch-to-zoom (touch gesture, re-renders at new scale)
 - Horizontal scroll lock (toggle via button, implemented as `overflow-x: hidden`)
-- Persist viewing state per file (scrollTop, scrollLeft, rotation, scale, horizontalLock) in localStorage
+- Persist viewing state per file (scrollTop, scrollLeft, rotation, scale, scrollLock) in localStorage
 - Installable as PWA (manifest + auto-generated Service Worker via vite-plugin-pwa)
 
 ## Tech stack
@@ -76,7 +76,7 @@ public/
 ### State persistence
 
 - Key: `pdf:<file.name>:<file.size>`
-- Saved: `{ scrollTop, scrollLeft, rotation, scale, horizontalLock }`
+- Saved: `{ scrollTop, scrollLeft, rotation, scale, scrollLock }`
 - Triggered by: scroll (debounced 500ms), rotation, zoom, lock toggle, `beforeunload`, `visibilitychange` (hidden)
 - Restored on file open: applies rotation → scale → scroll position (after 2x rAF for layout)
 

@@ -20,7 +20,7 @@ let viewer = new PdfViewer(container, viewport);
 let currentFile = null;
 let rotation = 0; // 0 or 270
 let userScale = 1.0; // 1.0 = fit width
-let horizontalLock = false;
+let scrollLock = false;
 let saveTimeout = null;
 
 // Zoom state
@@ -49,7 +49,7 @@ async function openPdf(file) {
   currentFile = file;
   rotation = 0;
   userScale = 1.0;
-  horizontalLock = false;
+  scrollLock = false;
   updateLockButton();
   updateRotateIcon();
 
@@ -82,7 +82,7 @@ async function openPdf(file) {
   if (saved) {
     rotation = saved.rotation || 0;
     userScale = saved.scale || 1.0;
-    horizontalLock = !!saved.horizontalLock;
+    scrollLock = !!saved.scrollLock;
     updateLockButton();
     updateRotateIcon();
 
@@ -120,6 +120,10 @@ btnRotate.addEventListener('click', async () => {
   rotation = rotation === 0 ? 270 : 0;
   updateRotateIcon();
 
+  // Reset scroll lock on orientation change
+  scrollLock = false;
+  updateLockButton();
+
   // Remember which page is centered before layout change
   const centeredPage = viewer.getCenteredPageIndex();
 
@@ -141,19 +145,19 @@ btnRotate.addEventListener('click', async () => {
 // ===================== Horizontal scroll lock =====================
 
 btnLock.addEventListener('click', () => {
-  horizontalLock = !horizontalLock;
+  scrollLock = !scrollLock;
   updateLockButton();
   applyHorizontalLock();
   scheduleSave();
 });
 
 function updateLockButton() {
-  btnLock.classList.toggle('active', horizontalLock);
-  btnLock.textContent = horizontalLock ? '🔏' : '🔓';
+  btnLock.classList.toggle('active', scrollLock);
+  btnLock.textContent = scrollLock ? '🔏' : '🔓';
   if (viewer.isHorizontal) {
-    btnLock.title = horizontalLock ? 'Vertical scroll locked' : 'Vertical scroll unlocked';
+    btnLock.title = scrollLock ? 'Vertical scroll locked' : 'Vertical scroll unlocked';
   } else {
-    btnLock.title = horizontalLock ? 'Horizontal scroll locked' : 'Horizontal scroll unlocked';
+    btnLock.title = scrollLock ? 'Horizontal scroll locked' : 'Horizontal scroll unlocked';
   }
 }
 
@@ -165,10 +169,10 @@ function applyHorizontalLock() {
   if (viewer.isHorizontal) {
     // Pages scroll horizontally — lock vertical
     viewport.style.overflowX = '';
-    viewport.style.overflowY = horizontalLock ? 'hidden' : '';
+    viewport.style.overflowY = scrollLock ? 'hidden' : '';
   } else {
     // Pages scroll vertically — lock horizontal
-    viewport.style.overflowX = horizontalLock ? 'hidden' : '';
+    viewport.style.overflowX = scrollLock ? 'hidden' : '';
     viewport.style.overflowY = '';
   }
 }
@@ -310,7 +314,7 @@ function saveCurrentState() {
     scrollLeft: Math.round(viewport.scrollLeft),
     rotation,
     scale: userScale,
-    horizontalLock,
+    scrollLock,
   });
 }
 
