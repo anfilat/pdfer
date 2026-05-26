@@ -18,10 +18,14 @@ const btnLock = document.getElementById('btn-lock');
 // App state
 let viewer = new PdfViewer(container, viewport);
 let currentFile = null;
-let rotation = 0; // 0 or 90
+let rotation = 0; // 0 or 270
 let userScale = 1.0; // 1.0 = fit width
 let horizontalLock = false;
 let saveTimeout = null;
+
+// Zoom state
+let isZooming = false;
+let wheelZoomTimeout = null;
 
 // Pinch-to-zoom state
 let pinchStartDist = 0;
@@ -62,7 +66,7 @@ async function openPdf(file) {
     await viewer.openFile(file);
   } catch (err) {
     console.error('Failed to open PDF:', err);
-    alert('Не удалось открыть PDF: ' + err.message);
+    alert('Failed to open PDF: ' + err.message);
     return;
   }
 
@@ -94,27 +98,24 @@ async function openPdf(file) {
   }
 }
 
-// ===================== Rotation (0 ↔ 90) =====================
+// ===================== Rotation (0 to 270) ====================
 
 btnRotate.addEventListener('click', async () => {
-  rotation = rotation === 0 ? 90 : 0;
-  btnRotate.classList.toggle('active', rotation === 90);
+  rotation = rotation === 0 ? 270 : 0;
+  btnRotate.classList.toggle('active', rotation === 270);
 
-  // Remember proportional scroll position
-  const maxScrollTop = viewport.scrollHeight - viewport.clientHeight;
-  const maxScrollLeft = viewport.scrollWidth - viewport.clientWidth;
-  const ratioTop = maxScrollTop > 0 ? viewport.scrollTop / maxScrollTop : 0;
-  const ratioLeft = maxScrollLeft > 0 ? viewport.scrollLeft / maxScrollLeft : 0;
+  // Remember which page is centered before layout change
+  const centeredPage = viewer.getCenteredPageIndex();
+
+  // Re-apply lock for new direction before layout
+  applyHorizontalLock();
 
   await viewer.setRotation(rotation);
 
-  // Restore proportional position
+  // Scroll to the same page after rotation
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      const newMaxTop = viewport.scrollHeight - viewport.clientHeight;
-      const newMaxLeft = viewport.scrollWidth - viewport.clientWidth;
-      viewport.scrollTop = ratioTop * newMaxTop;
-      viewport.scrollLeft = ratioLeft * newMaxLeft;
+      viewer.scrollToPage(centeredPage);
       viewer.onScroll();
       scheduleSave();
     });
@@ -133,15 +134,26 @@ btnLock.addEventListener('click', () => {
 function updateLockButton() {
   btnLock.classList.toggle('active', horizontalLock);
   btnLock.textContent = horizontalLock ? '🔏' : '🔓';
-  btnLock.title = horizontalLock ? 'Горизонтальный скролл заблокирован' : 'Горизонтальный скролл разблокирован';
+  if (viewer.isHorizontal) {
+    btnLock.title = horizontalLock ? 'Вертикальный скролл заблокирован' : 'Вертикальный скролл разблокирован';
+  } else {
+    btnLock.title = horizontalLock ? 'Горизонтальный скролл заблокирован' : 'Горизонтальный скролл разблокирован';
+  }
 }
 
+/**
+ * When rotated 0 (vertical scroll): lock hides overflow-x
+ * When rotated 270 (horizontal scroll): lock hides overflow-y
+ */
 function applyHorizontalLock() {
-  if (horizontalLock) {
-    // Freeze horizontal scroll by hiding overflow-x
-    viewport.style.overflowX = 'hidden';
+  if (viewer.isHorizontal) {
+    // Pages scroll horizontally — lock vertical
+    viewport.style.overflowX = '';
+    viewport.style.overflowY = horizontalLock ? 'hidden' : '';
   } else {
-    viewport.style.overflowX = 'auto';
+    // Pages scroll vertically — lock horizontal
+    viewport.style.overflowX = horizontalLock ? 'hidden' : '';
+    viewport.style.overflowY = '';
   }
 }
 
@@ -150,13 +162,49 @@ function applyHorizontalLock() {
 viewport.addEventListener(
   'scroll',
   () => {
-    viewer.onScroll();
+    // Don't trigger renders during zoom — they cause flicker
+    if (!isZooming) {
+      viewer.onScroll();
+    }
     scheduleSave();
   },
   { passive: true }
 );
 
-// ===================== Pinch-to-zoom =====================
+// ===================== Desktop zoom (trackpad pinch / Ctrl+wheel) =====================
+
+viewport.addEventListener(
+  'wheel',
+  e => {
+    if (!e.ctrlKey || !currentFile) return;
+    e.preventDefault();
+
+    const oldScale = userScale;
+    const delta = -e.deltaY;
+    const factor = 1 + Math.abs(delta) * 0.005;
+    const newScale = Math.max(0.5, Math.min(5.0, userScale * (delta > 0 ? factor : 1 / factor)));
+
+    // Zoom center = viewport center (trackpad has no finger point)
+    const centerX = viewport.clientWidth / 2;
+    const centerY = viewport.clientHeight / 2;
+
+    isZooming = true;
+    userScale = newScale;
+    viewer.updateSizesOnly(userScale);
+    viewer.adjustScrollForZoom(oldScale, newScale, centerX, centerY);
+
+    // Debounce actual canvas render
+    if (wheelZoomTimeout) clearTimeout(wheelZoomTimeout);
+    wheelZoomTimeout = setTimeout(() => {
+      isZooming = false;
+      viewer.setScale(userScale);
+      scheduleSave();
+    }, 200);
+  },
+  { passive: false }
+);
+
+// ===================== Pinch-to-zoom (mobile) =====================
 
 viewport.addEventListener(
   'touchstart',
@@ -173,6 +221,9 @@ viewport.addEventListener(
   { passive: false }
 );
 
+let lastPinchOriginX = 0;
+let lastPinchOriginY = 0;
+
 viewport.addEventListener(
   'touchmove',
   e => {
@@ -183,23 +234,48 @@ viewport.addEventListener(
     const dy = e.touches[0].clientY - e.touches[1].clientY;
     const dist = Math.sqrt(dx * dx + dy * dy);
     const ratio = dist / pinchStartDist;
-    const newScale = Math.max(0.5, Math.min(5.0, pinchStartScale * ratio));
 
-    if (Math.abs(newScale - userScale) / userScale > 0.03) {
-      userScale = newScale;
-      viewer.setScale(userScale);
-      scheduleSave();
-    }
+    // Apply CSS transform — no layout changes, instant, no flicker
+    const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+    const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+    const vpRect = viewport.getBoundingClientRect();
+    lastPinchOriginX = midX - vpRect.left;
+    lastPinchOriginY = midY - vpRect.top;
+
+    container.style.transformOrigin = `${lastPinchOriginX}px ${lastPinchOriginY}px`;
+    container.style.transform = `scale(${ratio})`;
   },
   { passive: false }
 );
 
 viewport.addEventListener(
   'touchend',
-  e => {
-    if (e.touches.length < 2) {
-      isPinching = false;
-    }
+  () => {
+    if (!isPinching) return;
+    isPinching = false;
+
+    // Calculate final scale from the CSS transform ratio
+    const currentTransform = container.style.transform;
+    container.style.transform = '';
+    container.style.transformOrigin = '';
+
+    if (!currentTransform) return;
+
+    const match = currentTransform.match(/scale\(([^)]+)\)/);
+    if (!match) return;
+    const ratio = parseFloat(match[1]);
+    const newScale = Math.max(0.5, Math.min(5.0, pinchStartScale * ratio));
+
+    if (newScale === pinchStartScale) return;
+
+    // Real resize + scroll correction at the pinch center
+    const oldScale = pinchStartScale;
+    userScale = newScale;
+    viewer.updateSizesOnly(userScale);
+    viewer.adjustScrollForZoom(oldScale, newScale, lastPinchOriginX, lastPinchOriginY);
+
+    viewer.setScale(userScale);
+    scheduleSave();
   },
   { passive: true }
 );

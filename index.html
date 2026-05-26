@@ -112,7 +112,19 @@
     }
     .page-wrapper canvas {
       display: block;
+      width: 100%;
+      height: 100%;
       box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+    }
+
+    /* Horizontal layout when rotated 90° */
+    #pdf-container.horizontal {
+      white-space: nowrap;
+    }
+    #pdf-container.horizontal .page-wrapper {
+      display: inline-block;
+      vertical-align: top;
+      margin: 4px;
     }
 
     /* hide scrollbar */
