@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1a1a2e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="/manifest.json" />
+  <title>PDFer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      overflow: hidden;
+      height: 100dvh;
+      width: 100vw;
+      touch-action: none;
+    }
+
+    /* ===== Welcome screen ===== */
+    #welcome {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100dvh;
+      gap: 24px;
+    }
+    #welcome h1 {
+      font-size: 2rem;
+      color: #e2e2e2;
+    }
+    #welcome .subtitle {
+      color: #888;
+      font-size: 0.95rem;
+    }
+    .btn-open {
+      background: #0f3460;
+      color: #eee;
+      border: 2px solid #533483;
+      border-radius: 12px;
+      padding: 14px 36px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-open:active { background: #533483; }
+
+    /* ===== Toolbar ===== */
+    #toolbar {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      height: 48px;
+      background: #16213e;
+      border-bottom: 1px solid #333;
+      align-items: center;
+      padding: 0 8px;
+      gap: 6px;
+    }
+    #toolbar .filename {
+      flex: 1;
+      font-size: 0.85rem;
+      color: #aaa;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 0 6px;
+    }
+    .tbtn {
+      background: none;
+      border: none;
+      color: #ccc;
+      font-size: 1.3rem;
+      padding: 8px;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: background 0.15s, color 0.15s;
+      min-width: 44px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tbtn:active { background: #333; }
+    .tbtn.active {
+      background: #533483;
+      color: #fff;
+    }
+
+    /* ===== PDF viewport ===== */
+    #viewport {
+      display: none;
+      position: fixed;
+      top: 48px; left: 0; right: 0; bottom: 0;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      background: #0f0f1a;
+      touch-action: pan-x pan-y; /* allow scroll but prevent browser zoom */
+    }
+    #pdf-container {
+      transform-origin: 0 0;
+    }
+    .page-wrapper {
+      margin: 4px auto;
+      position: relative;
+    }
+    .page-wrapper canvas {
+      display: block;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+    }
+
+    /* hide scrollbar */
+    #viewport::-webkit-scrollbar { width: 0; height: 0; }
+  </style>
+</head>
+<body>
+
+  <!-- Welcome screen -->
+  <div id="welcome">
+    <h1>📄 PDFer</h1>
+    <p class="subtitle">PDF-просмотрщик с запоминанием позиции</p>
+    <button class="btn-open" id="btn-open">Открыть PDF</button>
+    <input type="file" id="file-input" accept="application/pdf" hidden />
+  </div>
+
+  <!-- Toolbar -->
+  <div id="toolbar">
+    <button class="tbtn" id="btn-rotate" title="Повгорнуть на 90°">🔄</button>
+    <button class="tbtn" id="btn-lock" title="Блокировка горизонтального скролла">🔒</button>
+    <span class="filename" id="filename"></span>
+    <button class="tbtn" id="btn-open2" title="Открыть другой файл">📂</button>
+  </div>
+
+  <!-- PDF viewport -->
+  <div id="viewport">
+    <div id="pdf-container"></div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

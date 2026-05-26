@@ -1,0 +1,28 @@
+{
+  "name": "pdfer",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "oxlint src/",
+    "lint:fix": "oxlint --fix src/",
+    "format": "oxfmt src/",
+    "format:check": "oxfmt --check src/"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "npx oxfmt --check src/ && npx oxlint src/"
+  },
+  "dependencies": {
+    "pdfjs-dist": "^4.10.38"
+  },
+  "devDependencies": {
+    "oxfmt": "^0.51.0",
+    "oxlint": "^1.66.0",
+    "simple-git-hooks": "^2.13.1",
+    "vite": "^8.0.14",
+    "vite-plugin-pwa": "^1.3.0"
+  }
+}
