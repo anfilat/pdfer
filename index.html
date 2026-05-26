@@ -93,6 +93,11 @@
       color: #fff;
     }
 
+    /* Rotation icon */
+    .rotate-icon { width: 26px; height: 26px; }
+    .rotate-icon.ccw .cw-group { display: none; }
+    .rotate-icon.cw .ccw-group { display: none; }
+
     /* ===== PDF viewport ===== */
     #viewport {
       display: none;
@@ -143,7 +148,22 @@
 
   <!-- Toolbar -->
   <div id="toolbar">
-    <button class="tbtn" id="btn-rotate" title="Повгорнуть на 90°">🔄</button>
+    <button class="tbtn" id="btn-rotate" title="Повернуть на 90°">
+      <svg class="rotate-icon ccw" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <!-- CCW: left vertical + top horizontal with arrow → (top-left corner) -->
+        <g class="ccw-group">
+          <line x1="6" y1="5" x2="6" y2="19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <line x1="6" y1="5" x2="18" y2="5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <polyline points="14,2 18,5 14,8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <!-- CW: same L-shape but arrow points down at bottom of vertical -->
+        <g class="cw-group">
+          <line x1="6" y1="5" x2="6" y2="19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <line x1="6" y1="5" x2="18" y2="5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <polyline points="3,15 6,19 9,15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+      </svg>
+    </button>
     <button class="tbtn" id="btn-lock" title="Блокировка горизонтального скролла">🔒</button>
     <span class="filename" id="filename"></span>
     <button class="tbtn" id="btn-open2" title="Открыть другой файл">📂</button>

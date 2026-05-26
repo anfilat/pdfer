@@ -51,6 +51,7 @@ async function openPdf(file) {
   userScale = 1.0;
   horizontalLock = false;
   updateLockButton();
+  updateRotateIcon();
 
   // Show viewer UI
   welcome.style.display = 'none';
@@ -61,6 +62,12 @@ async function openPdf(file) {
   // Reset scroll
   viewport.scrollLeft = 0;
   viewport.scrollTop = 0;
+
+  // Reset viewer rotation to default (vertical) before opening
+  if (viewer.isHorizontal) {
+    await viewer.setRotation(0);
+  }
+  applyHorizontalLock();
 
   try {
     await viewer.openFile(file);
@@ -77,6 +84,7 @@ async function openPdf(file) {
     userScale = saved.scale || 1.0;
     horizontalLock = !!saved.horizontalLock;
     updateLockButton();
+    updateRotateIcon();
 
     if (rotation !== 0) {
       await viewer.setRotation(rotation);
@@ -100,9 +108,17 @@ async function openPdf(file) {
 
 // ===================== Rotation (0 to 270) ====================
 
+function updateRotateIcon() {
+  const svg = btnRotate.querySelector('.rotate-icon');
+  if (!svg) return;
+  svg.classList.toggle('ccw', rotation === 0);
+  svg.classList.toggle('cw', rotation === 270);
+  btnRotate.classList.toggle('active', rotation === 270);
+}
+
 btnRotate.addEventListener('click', async () => {
   rotation = rotation === 0 ? 270 : 0;
-  btnRotate.classList.toggle('active', rotation === 270);
+  updateRotateIcon();
 
   // Remember which page is centered before layout change
   const centeredPage = viewer.getCenteredPageIndex();
