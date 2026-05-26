@@ -1,9 +1,10 @@
 // pdf-viewer.js — PDF rendering with PDF.js
 
 import * as pdfjsLib from 'pdfjs-dist';
-import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+// Use CDN for worker — avoids Vite 8 intercepting/trying to parse the minified worker
+const PDFJS_VERSION = pdfjsLib.version;
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/pdf.worker.min.mjs`;
 
 const PAGE_GAP = 8; // px between pages
 
