@@ -47,6 +47,13 @@ fileInput.addEventListener('change', async e => {
 async function openPdf(file) {
   if (currentFile) saveCurrentState();
 
+  // Cancel any in-progress wheel zoom to prevent stale timeout firing
+  if (wheelZoomTimeout) {
+    clearTimeout(wheelZoomTimeout);
+    wheelZoomTimeout = null;
+  }
+  isZooming = false;
+
   currentFile = file;
   rotation = 0;
   userScale = 1.0;
