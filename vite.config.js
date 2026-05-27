@@ -10,7 +10,7 @@ export default defineConfig({
         enabled: true,
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,png,svg}'],
+        globPatterns: ['**/*.{js,mjs,css,html,png,svg,wasm,ttf,pfb}'],
       },
       manifest: {
         name: 'PDFer',
