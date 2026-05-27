@@ -316,6 +316,13 @@ viewport.addEventListener(
   { passive: true }
 );
 
+viewport.addEventListener('touchcancel', () => {
+  if (!isPinching) return;
+  isPinching = false;
+  container.style.transform = '';
+  container.style.transformOrigin = '';
+});
+
 // ===================== State persistence =====================
 
 function scheduleSave() {
