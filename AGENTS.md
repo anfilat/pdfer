@@ -41,7 +41,8 @@ npm run format:check # oxfmt --check src/
 
 ```
 index.html              Main HTML (welcome screen, toolbar, viewport). All CSS is inline in <style>.
-vite.config.js          Vite config + PWA manifest + Workbox settings.
+vite.config.js          Vite config: base '/pdfer/', PWA manifest (vite-plugin-pwa, generateSW mode),
+                         Workbox settings, devOptions for manifest in dev mode.
 src/
   main.js               Entry point. UI wiring: file input, toolbar buttons, pinch-to-zoom gesture,
                          horizontal lock toggle, state persistence (debounced save to localStorage).
@@ -51,10 +52,13 @@ src/
   storage.js             saveState / loadState / clearState — localStorage wrapper keyed by
                          `pdf:<filename>:<filesize>`.
 public/
-  manifest.json          Static manifest (vite-plugin-pwa generates its own at build time).
-  sw.js                  Not used in prod (vite-plugin-pwa generates SW). Kept as fallback.
-  icons/                 icon-192.png, icon-512.png — PWA icons.
+  favicon.svg            SVG favicon (white document with red "PDF" text).
+  icons/                 icon-192.png, icon-512.png — PWA icons generated from the same SVG design
+                         (dark theme_color background, document with fold and "PDF" text).
   test.pdf               Test PDF (5 pages) for development.
+.github/
+  workflows/
+    deploy.yml           GitHub Actions workflow: build + deploy to GitHub Pages.
 ```
 
 ## Architecture
@@ -96,4 +100,4 @@ Browser zoom is prevented via `touch-action: pan-x pan-y` on `#viewport` and `to
 - No virtual scroll — all page wrappers are in DOM simultaneously; large PDFs (100+ pages) may be slow
 - No keyboard shortcuts
 - Pinch-to-zoom re-renders visible pages on every >3% change — may lag on slow devices
-- Icons are minimal auto-generated PNGs — should be replaced with proper app icons
+- Icons are SVG-based PNGs generated via sharp — design matches favicon.svg
