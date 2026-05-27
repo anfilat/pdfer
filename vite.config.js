@@ -19,8 +19,17 @@ export default defineConfig({
         id: '/pdfer/',
         start_url: '/pdfer/',
         display: 'standalone',
+        file_handlers: [
+          {
+            action: '/pdfer/',
+            accept: {
+              'application/pdf': ['.pdf'],
+            },
+          },
+        ],
         background_color: '#1a1a2e',
         theme_color: '#1a1a2e',
+        prefer_related_applications: true,
         icons: [
           {
             src: '/pdfer/icons/icon-192.png',

@@ -327,6 +327,20 @@ window.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') saveCurrentState();
 });
 
+// ===================== Handle file from file_handlers (OS "Open with") =====================
+
+if ('launchQueue' in window) {
+  window.launchQueue.setConsumer(async launchParams => {
+    for (const handle of launchParams.files) {
+      const file = await handle.getFile();
+      if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+        await openPdf(file);
+        return;
+      }
+    }
+  });
+}
+
 // ===================== Auto-load last PDF on startup =====================
 
 (async () => {
