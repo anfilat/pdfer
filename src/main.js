@@ -75,7 +75,7 @@ async function openPdf(file) {
   if (viewer.isHorizontal) {
     await viewer.setRotation(0);
   }
-  applyHorizontalLock();
+  applyScrollLock();
 
   try {
     await viewer.openFile(file);
@@ -151,7 +151,7 @@ btnRotate.addEventListener('click', async () => {
   const centeredPage = viewer.getCenteredPageIndex();
 
   // Re-apply lock for new direction before layout
-  applyHorizontalLock();
+  applyScrollLock();
 
   await viewer.setRotation(rotation);
 
@@ -170,7 +170,7 @@ btnRotate.addEventListener('click', async () => {
 btnLock.addEventListener('click', () => {
   scrollLock = !scrollLock;
   updateLockButton();
-  applyHorizontalLock();
+  applyScrollLock();
   scheduleSave();
 });
 
@@ -188,7 +188,7 @@ function updateLockButton() {
  * When rotated 0 (vertical scroll): lock hides overflow-x
  * When rotated 270 (horizontal scroll): lock hides overflow-y
  */
-function applyHorizontalLock() {
+function applyScrollLock() {
   if (viewer.isHorizontal) {
     // Pages scroll horizontally — lock vertical
     viewport.style.overflowX = '';
