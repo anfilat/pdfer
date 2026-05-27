@@ -40,7 +40,7 @@
       color: #888;
       font-size: 0.95rem;
     }
-    .btn-open {
+    .btn-open-welcome {
       background: #fff;
       color: #333;
       border: 2px solid #ccc;
@@ -50,7 +50,7 @@
       cursor: pointer;
       transition: background 0.2s;
     }
-    .btn-open:active { background: #d0d0d0; color: #333; }
+    .btn-open-welcome:active { background: #d0d0d0; }
 
     /* ===== Toolbar ===== */
     #toolbar {
@@ -92,7 +92,6 @@
     .tbtn:active { background: #e0e0e0; }
     .tbtn.active {
       background: #d0d0d0;
-      color: #333;
     }
 
     /* Rotation icon */
@@ -143,7 +142,7 @@
   <!-- Welcome screen -->
   <div id="welcome">
     <h1>📄 PDFer</h1>
-    <button class="btn-open" id="btn-open">Open PDF</button>
+    <button class="btn-open-welcome" id="btn-open-welcome">Open PDF</button>
     <input type="file" id="file-input" accept="application/pdf" hidden />
   </div>
 
@@ -167,7 +166,7 @@
     </button>
     <button class="tbtn" id="btn-lock" title="Lock horizontal scroll">🔒</button>
     <span class="filename" id="filename"></span>
-    <button class="tbtn" id="btn-open2" title="Open another file">📂</button>
+    <button class="tbtn" id="btn-open-toolbar" title="Open another file">📂</button>
   </div>
 
   <!-- PDF viewport -->

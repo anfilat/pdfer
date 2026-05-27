@@ -33,7 +33,7 @@ export class PdfViewer {
 
   /** Whether pages are laid out horizontally */
   get isHorizontal() {
-    return this.rotation === 270 || this.rotation === 90;
+    return this.rotation === 270;
   }
 
   async openFile(file) {

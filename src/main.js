@@ -11,8 +11,8 @@ const viewport = document.getElementById('viewport');
 const container = document.getElementById('pdf-container');
 const fileInput = document.getElementById('file-input');
 const filenameEl = document.getElementById('filename');
-const btnOpen = document.getElementById('btn-open');
-const btnOpen2 = document.getElementById('btn-open2');
+const btnOpenWelcome = document.getElementById('btn-open-welcome');
+const btnOpenToolbar = document.getElementById('btn-open-toolbar');
 const btnRotate = document.getElementById('btn-rotate');
 const btnLock = document.getElementById('btn-lock');
 
@@ -35,8 +35,8 @@ let isPinching = false;
 
 // ===================== File opening =====================
 
-btnOpen.addEventListener('click', () => fileInput.click());
-btnOpen2.addEventListener('click', () => fileInput.click());
+btnOpenWelcome.addEventListener('click', () => fileInput.click());
+btnOpenToolbar.addEventListener('click', () => fileInput.click());
 
 fileInput.addEventListener('change', async e => {
   const file = e.target.files[0];
