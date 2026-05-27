@@ -37,6 +37,10 @@ export class PdfViewer {
   }
 
   async openFile(file) {
+    // Cancel in-flight renders from previous document
+    this.renderTasks.forEach(task => task.cancel());
+    this.renderTasks.clear();
+
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({
       data: arrayBuffer,
