@@ -200,6 +200,10 @@ function applyScrollLock() {
   }
 }
 
+function clampScale(value) {
+  return Math.max(0.5, Math.min(5.0, value));
+}
+
 // ===================== Scroll handler =====================
 
 viewport.addEventListener(
@@ -225,7 +229,7 @@ viewport.addEventListener(
     const oldScale = userScale;
     const delta = -e.deltaY;
     const factor = 1 + Math.abs(delta) * 0.005;
-    const newScale = Math.max(0.5, Math.min(5.0, userScale * (delta > 0 ? factor : 1 / factor)));
+    const newScale = clampScale(userScale * (delta > 0 ? factor : 1 / factor));
 
     // Zoom center = viewport center (trackpad has no finger point)
     const centerX = viewport.clientWidth / 2;
@@ -307,7 +311,7 @@ viewport.addEventListener(
     const match = currentTransform.match(/scale\(([^)]+)\)/);
     if (!match) return;
     const ratio = parseFloat(match[1]);
-    const newScale = Math.max(0.5, Math.min(5.0, pinchStartScale * ratio));
+    const newScale = clampScale(pinchStartScale * ratio);
 
     if (newScale === pinchStartScale) return;
 
