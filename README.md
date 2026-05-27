@@ -6,6 +6,7 @@ A simple PDF viewer for your phone. Opens files, remembers where you left off, w
 
 ## Features
 
+- **Open from anywhere** — PDFer appears in Android's "Open with" menu for PDF files
 - **Auto-restore** — reopens your last file when you come back
 - **Continuous scroll** — all pages in one flow, no page-by-page navigation
 - **Rotation** — switch between vertical and horizontal document orientation
@@ -28,4 +29,6 @@ PDFer is a Progressive Web App. On Android:
 2. Tap **Add to Home Screen** in the browser menu
 3. PDFer appears as a regular app
 
-Once installed, no internet needed — the app and files are cached locally.
+Once installed, PDFer also shows up in the system **Open with** menu when you tap a PDF file — just like a native app.
+
+No internet needed — the app and files are cached locally.

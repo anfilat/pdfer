@@ -4,7 +4,7 @@
 
 PWA PDF viewer optimised for Android phones. Core features:
 
-- Open PDF files from device (`<input type="file">`)
+- Open PDF files from device (`<input type="file">`) or via OS "Open with" dialog (file_handlers)
 - Auto-load last-opened PDF on launch (persisted via OPFS)
 - Continuous scroll through all pages (no page-by-page navigation)
 - Rotate PDF 0° ↔ 270° (native PDF.js rotation, not CSS transform)
@@ -45,11 +45,13 @@ npm run format:check # oxfmt --check src/
 ```
 index.html              Main HTML (welcome screen, toolbar, viewport). All CSS is inline in <style>.
 vite.config.js          Vite config: base '/pdfer/', PWA manifest (vite-plugin-pwa, generateSW mode),
-                         Workbox settings (globs include wasm, fonts, etc.), devOptions for manifest in dev.
+                         Workbox settings (globs include wasm, fonts, etc.), file_handlers for PDF association,
+                         prefer_related_applications, devOptions for manifest in dev.
 src/
   main.js               Entry point. UI wiring: file input, toolbar buttons, pinch-to-zoom gesture,
                          desktop Ctrl+wheel zoom, horizontal lock toggle, state persistence (debounced save
-                         to localStorage), auto-load last PDF from OPFS on startup.
+                         to localStorage), auto-load last PDF from OPFS on startup, file_handlers integration
+                         for OS-level "Open with" support.
   pdf-viewer.js          PdfViewer class — wraps pdfjs-dist 5.x. Manages page rendering lifecycle:
                          lazy rendering of visible pages (with 3x viewport buffer), rotation via
                          page.getViewport({ rotation }), scale via re-render at new effective scale.
@@ -141,6 +143,7 @@ When rotated 270°, the container gets class `.horizontal`:
 - Workbox glob patterns include `js`, `mjs`, `css`, `html`, `png`, `svg`, `wasm`, `ttf`, `pfb` — covers all PDF.js assets
 - `registerType: 'autoUpdate'` — SW updates automatically
 - Dev mode: PWA manifest is available via `devOptions.enabled: true`
+- `file_handlers` — registers PDFer as a handler for `application/pdf` in the OS. When installed as PWA, Android shows PDFer in the "Open with" dialog for PDF files. Handled in `main.js` via `window.launchQueue.setConsumer()`.
 
 ## Known limitations / future work
 
