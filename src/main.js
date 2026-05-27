@@ -29,9 +29,23 @@ let isZooming = false;
 let wheelZoomTimeout = null;
 
 // Pinch-to-zoom state
-let pinchStartDist = 0;
-let pinchStartScale = 1.0;
 let isPinching = false;
+let pinchPrevDist = 0;
+let touchUnusedFactor = 1;
+
+/**
+ * Quantize scale changes to 1% steps with leftover accumulation (from pdf.js).
+ * Prevents sub-percent changes that cause jitter with CSS layout.
+ */
+function accumulateFactor(previousScale, factor) {
+  if (factor === 1) return 1;
+  if ((touchUnusedFactor > 1 && factor < 1) || (touchUnusedFactor < 1 && factor > 1)) {
+    touchUnusedFactor = 1;
+  }
+  const newFactor = Math.floor(previousScale * factor * touchUnusedFactor * 100) / (100 * previousScale);
+  touchUnusedFactor = factor / newFactor;
+  return newFactor;
+}
 
 // ===================== File opening =====================
 
@@ -231,9 +245,10 @@ viewport.addEventListener(
     const factor = 1 + Math.abs(delta) * 0.005;
     const newScale = clampScale(userScale * (delta > 0 ? factor : 1 / factor));
 
-    // Zoom center = viewport center (trackpad has no finger point)
-    const centerX = viewport.clientWidth / 2;
-    const centerY = viewport.clientHeight / 2;
+    // Zoom center = cursor position in viewport coordinates
+    const vpRect = viewport.getBoundingClientRect();
+    const centerX = e.clientX - vpRect.left;
+    const centerY = e.clientY - vpRect.top;
 
     isZooming = true;
     userScale = newScale;
@@ -259,17 +274,14 @@ viewport.addEventListener(
     if (e.touches.length === 2) {
       e.preventDefault();
       isPinching = true;
+      isZooming = true;
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
-      pinchStartDist = Math.sqrt(dx * dx + dy * dy);
-      pinchStartScale = userScale;
+      pinchPrevDist = Math.sqrt(dx * dx + dy * dy);
     }
   },
   { passive: false }
 );
-
-let lastPinchOriginX = 0;
-let lastPinchOriginY = 0;
 
 viewport.addEventListener(
   'touchmove',
@@ -280,17 +292,28 @@ viewport.addEventListener(
     const dx = e.touches[0].clientX - e.touches[1].clientX;
     const dy = e.touches[0].clientY - e.touches[1].clientY;
     const dist = Math.sqrt(dx * dx + dy * dy);
-    const ratio = dist / pinchStartDist;
 
-    // Apply CSS transform — no layout changes, instant, no flicker
+    // Incremental factor from previous touchmove
+    const rawFactor = dist / pinchPrevDist;
+    const scaleFactor = accumulateFactor(userScale, rawFactor);
+
+    // Midpoint in viewport coordinates (zoom origin)
     const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
     const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
     const vpRect = viewport.getBoundingClientRect();
-    lastPinchOriginX = midX - vpRect.left;
-    lastPinchOriginY = midY - vpRect.top;
+    const originX = midX - vpRect.left;
+    const originY = midY - vpRect.top;
 
-    container.style.transformOrigin = `${lastPinchOriginX}px ${lastPinchOriginY}px`;
-    container.style.transform = `scale(${ratio})`;
+    const oldScale = userScale;
+    const newScale = clampScale(userScale * scaleFactor);
+
+    if (newScale !== oldScale) {
+      userScale = newScale;
+      viewer.updateSizesOnly(userScale);
+      viewer.adjustScrollForZoom(oldScale, newScale, originX, originY);
+    }
+
+    pinchPrevDist = dist;
   },
   { passive: false }
 );
@@ -300,27 +323,8 @@ viewport.addEventListener(
   () => {
     if (!isPinching) return;
     isPinching = false;
-
-    // Calculate final scale from the CSS transform ratio
-    const currentTransform = container.style.transform;
-    container.style.transform = '';
-    container.style.transformOrigin = '';
-
-    if (!currentTransform) return;
-
-    const match = currentTransform.match(/scale\(([^)]+)\)/);
-    if (!match) return;
-    const ratio = parseFloat(match[1]);
-    const newScale = clampScale(pinchStartScale * ratio);
-
-    if (newScale === pinchStartScale) return;
-
-    // Real resize + scroll correction at the pinch center
-    const oldScale = pinchStartScale;
-    userScale = newScale;
-    viewer.updateSizesOnly(userScale);
-    viewer.adjustScrollForZoom(oldScale, newScale, lastPinchOriginX, lastPinchOriginY);
-
+    isZooming = false;
+    touchUnusedFactor = 1;
     viewer.setScale(userScale);
     scheduleSave();
   },
@@ -330,8 +334,8 @@ viewport.addEventListener(
 viewport.addEventListener('touchcancel', () => {
   if (!isPinching) return;
   isPinching = false;
-  container.style.transform = '';
-  container.style.transformOrigin = '';
+  isZooming = false;
+  touchUnusedFactor = 1;
 });
 
 // ===================== State persistence =====================

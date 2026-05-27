@@ -110,11 +110,12 @@
       touch-action: pan-x pan-y; /* allow scroll but prevent browser zoom */
     }
     #pdf-container {
-      transform-origin: 0 0;
     }
     .page-wrapper {
       margin: 4px auto;
       position: relative;
+      width: calc(var(--base-w, 0) * var(--effective-scale, 1) * 1px);
+      height: calc(var(--base-h, 0) * var(--effective-scale, 1) * 1px);
     }
     .page-wrapper canvas {
       display: block;

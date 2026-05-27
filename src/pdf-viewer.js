@@ -116,13 +116,30 @@ export class PdfViewer {
     return { width: dim.width * effectiveScale, height: dim.height * effectiveScale };
   }
 
-  _updateAllWrapperSizes() {
+  /** Set --base-w/--base-h on each wrapper (called when baseScale or rotation changes) */
+  _updateBaseDimensions() {
     for (let i = 0; i < this.numPages; i++) {
-      const { width, height } = this._getPageDisplaySize(i);
+      const dim = this.pageDims[i];
       const wrapper = this.pageWrappers[i];
-      wrapper.style.width = Math.floor(width) + 'px';
-      wrapper.style.height = Math.floor(height) + 'px';
+      if (this.isHorizontal) {
+        wrapper.style.setProperty('--base-w', dim.height * this.baseScale);
+        wrapper.style.setProperty('--base-h', dim.width * this.baseScale);
+      } else {
+        wrapper.style.setProperty('--base-w', dim.width * this.baseScale);
+        wrapper.style.setProperty('--base-h', dim.height * this.baseScale);
+      }
     }
+  }
+
+  /** Set --effective-scale on container (single DOM write, called on every zoom step) */
+  _updateEffectiveScale() {
+    this.container.style.setProperty('--effective-scale', this.scale);
+  }
+
+  /** Full size update: base dimensions + effective scale */
+  _updateAllWrapperSizes() {
+    this._updateBaseDimensions();
+    this._updateEffectiveScale();
   }
 
   /** Toggle CSS class for horizontal vs vertical page flow */
@@ -259,18 +276,18 @@ export class PdfViewer {
   /** Full render at given scale */
   async setScale(scale) {
     this.scale = scale;
-    this._updateAllWrapperSizes();
+    this._updateEffectiveScale();
     await this._renderVisiblePages();
   }
 
   /**
-   * Update CSS sizes only — no canvas render.
-   * Used during zoom gestures to keep UI responsive.
+   * Update CSS scale only — no canvas render, no base dimension recalc.
+   * Fast path for zoom gestures: single DOM write to --effective-scale.
    * Old canvas content stretches to fill, preventing flicker.
    */
   updateSizesOnly(scale) {
     this.scale = scale;
-    this._updateAllWrapperSizes();
+    this._updateEffectiveScale();
   }
 
   destroy() {
