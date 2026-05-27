@@ -16,7 +16,7 @@
     "pre-commit": "npx oxfmt --check src/ && npx oxlint src/"
   },
   "dependencies": {
-    "pdfjs-dist": "^4.10.38"
+    "pdfjs-dist": "5.7.284"
   },
   "devDependencies": {
     "oxfmt": "^0.51.0",
