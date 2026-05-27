@@ -2,9 +2,9 @@
 
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Use CDN for worker — avoids Vite 8 intercepting/trying to parse the minified worker
-const PDFJS_VERSION = pdfjsLib.version;
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/pdf.worker.min.mjs`;
+pdfjsLib.GlobalWorkerOptions.workerSrc = `${import.meta.env.BASE_URL}pdf.worker.min.mjs`;
+
+const BASE = import.meta.env.BASE_URL;
 
 export class PdfViewer {
   /**
@@ -38,7 +38,11 @@ export class PdfViewer {
 
   async openFile(file) {
     const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const pdf = await pdfjsLib.getDocument({
+      data: arrayBuffer,
+      wasmUrl: `${BASE}wasm/`,
+      standardFontDataUrl: `${BASE}standard_fonts/`,
+    }).promise;
     this.pdfDoc = pdf;
     this.numPages = pdf.numPages;
     this.pageCanvases = [];
