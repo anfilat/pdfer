@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect x="6" y="2" width="20" height="28" fill="#fff" stroke="#444" stroke-width="1"/>
+  <!-- Folded corner triangle -->
+  <path d="M20 2 L26 2 V8 Z" fill="#e8e8e8" stroke="none"/>
+  <!-- Fold crease -->
+  <line x1="20" y1="2" x2="26" y2="8" stroke="#444" stroke-width="0.8"/>
+  <!-- PDF text -->
+  <text x="16" y="21" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="9" fill="#e53e3e">PDF</text>
+</svg>
