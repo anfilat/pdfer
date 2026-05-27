@@ -37,6 +37,9 @@ export class PdfViewer {
   }
 
   async openFile(file) {
+    // Release previous PDF.js document resources (parsed pages, font caches, WASM allocations)
+    if (this.pdfDoc) this.pdfDoc.destroy();
+
     // Cancel in-flight renders from previous document
     this.renderTasks.forEach(task => task.cancel());
     this.renderTasks.clear();
