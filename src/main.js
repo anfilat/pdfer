@@ -2,6 +2,7 @@
 
 import { PdfViewer } from './pdf-viewer.js';
 import { saveState, loadState } from './storage.js';
+import { savePdf, loadPdf } from './pdf-store.js';
 
 // DOM elements
 const welcome = document.getElementById('welcome');
@@ -76,6 +77,9 @@ async function openPdf(file) {
     alert('Failed to open PDF: ' + err.message);
     return;
   }
+
+  // Persist file to OPFS so it can be reopened on next launch
+  await savePdf(file);
 
   // Restore saved state
   const saved = loadState(file);
@@ -322,3 +326,12 @@ window.addEventListener('beforeunload', () => saveCurrentState());
 window.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') saveCurrentState();
 });
+
+// ===================== Auto-load last PDF on startup =====================
+
+(async () => {
+  const savedPdf = await loadPdf();
+  if (savedPdf) {
+    await openPdf(savedPdf);
+  }
+})();
