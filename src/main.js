@@ -329,11 +329,15 @@ window.addEventListener('visibilitychange', () => {
 
 // ===================== Handle file from file_handlers (OS "Open with") =====================
 
+// Flag to prevent auto-load from racing with an OS file launch
+let launchedWithFile = false;
+
 if ('launchQueue' in window) {
   window.launchQueue.setConsumer(async launchParams => {
     for (const handle of launchParams.files) {
       const file = await handle.getFile();
       if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+        launchedWithFile = true;
         await openPdf(file);
         return;
       }
@@ -344,6 +348,9 @@ if ('launchQueue' in window) {
 // ===================== Auto-load last PDF on startup =====================
 
 (async () => {
+  // Skip if the OS launched us with a specific file via file_handlers
+  if (launchedWithFile) return;
+
   const savedPdf = await loadPdf();
   if (savedPdf) {
     await openPdf(savedPdf);
