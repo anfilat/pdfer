@@ -9,7 +9,7 @@ PWA PDF viewer optimised for Android phones. Core features:
 - Continuous scroll through all pages (no page-by-page navigation)
 - Rotate PDF 0° ↔ 270° (native PDF.js rotation, not CSS transform)
 - Horizontal scroll mode when rotated (CSS inline-block layout)
-- Pinch-to-zoom (mobile: CSS transform during gesture → re-render on end)
+- Pinch-to-zoom (mobile: incremental layout zoom via CSS custom properties → canvas re-render on end)
 - Desktop zoom (Ctrl+wheel / trackpad pinch)
 - Scroll lock (toggle via button: hides overflow on the cross-axis)
 - Persist viewing state per file (scrollTop, scrollLeft, rotation, scale, scrollLock) in localStorage
@@ -80,34 +80,42 @@ public/
 1. `PdfViewer.openFile(file)` reads ArrayBuffer → `pdfjsLib.getDocument()` (with `wasmUrl` and `standardFontDataUrl`) → iterates all pages to collect base dimensions at scale=1
 2. `_calcBaseScale()` — determines scale that makes page width = viewport width (vertical mode) or page height = viewport height (horizontal mode, when rotated 270°)
 3. `_createPages()` — creates a `<div class="page-wrapper">` + `<canvas>` for each page. Canvas starts at 1×1 (not 300×150 default)
-4. `_updateAllWrapperSizes()` — sets CSS width/height on every wrapper based on current scale+rotation. This ensures scrollbar dimensions are correct even for unrendered pages
+4. `_updateAllWrapperSizes()` — delegates to `_updateBaseDimensions()` and `_updateEffectiveScale()`. Together they set CSS custom properties (`--base-w`, `--base-h` per wrapper, `--effective-scale` on container) that compute wrapper dimensions via CSS `calc()`. This ensures scrollbar dimensions are correct even for unrendered pages
 5. `_updateLayoutDirection()` — toggles `.horizontal` class on container: inline-block layout for rotated mode, normal block flow for vertical mode
 6. `_renderVisiblePages()` — uses `getBoundingClientRect()` to check which wrappers intersect the viewport (with 3x buffer). Only those pages are rendered via offscreen canvas + `replaceWith()` swap
 7. On scroll → `onScroll()` → `_renderVisiblePages()` renders newly visible pages
-8. On rotation/scale change → all canvases reset → `_updateAllWrapperSizes()` → `_renderVisiblePages()` re-renders visible pages at new parameters
+8. On rotation/scale change → all canvases reset → `_updateBaseDimensions()` + `_updateEffectiveScale()` → `_renderVisiblePages()` re-renders visible pages at new parameters
 
 ### Key invariant: `_renderKey()`
 
 `baseScale * scale : rotation` — when this changes, all canvas content is stale and gets cleared. The `renderedPages` Set tracks which pages have been rendered at the current key.
 
+### Wrapper sizing via CSS custom properties
+
+Wrapper dimensions are computed by CSS `calc()` from two sets of CSS custom properties:
+
+- **`_updateBaseDimensions()`** — sets unitless `--base-w` / `--base-h` on each wrapper (base dimension × baseScale). Called only when `baseScale` or rotation changes — expensive per-wrapper loop.
+- **`_updateEffectiveScale()`** — sets `--effective-scale` on the container. Called on every zoom step — single DOM write, fast.
+- CSS rule: `width: calc(var(--base-w, 0) * var(--effective-scale, 1) * 1px)` — JS sets unitless numbers, CSS converts to pixels.
+
 ### Flicker-free zoom
 
-- **`updateSizesOnly(scale)`** — updates wrapper CSS sizes without re-rendering canvases. Existing canvas content stretches via CSS `width/height: 100%`, preventing blank flash during continuous zoom gestures.
+- **`updateSizesOnly(scale)`** — sets `--effective-scale` via `_updateEffectiveScale()` without re-rendering canvases. Existing canvas content stretches via CSS `width/height: 100%`, preventing blank flash during continuous zoom gestures.
 - **Offscreen canvas swap** — `_renderPage()` renders to a detached canvas, then replaces the old canvas in DOM via `replaceWith()`. Eliminates intermediate blank states.
 - **`adjustScrollForZoom(oldScale, newScale, centerX, centerY)`** — corrects viewport scroll position so the document point under the zoom center stays in place.
 
 ### Pinch-to-zoom (mobile)
 
 Touch handlers on `#viewport`:
-1. `touchstart` (2 fingers) → record start distance + current scale
-2. `touchmove` → calculate ratio, apply CSS `transform: scale(ratio)` with `transformOrigin` at pinch midpoint. No layout changes — instant, no flicker
-3. `touchend` → read final ratio from CSS transform → compute new scale → `updateSizesOnly()` + `adjustScrollForZoom()` → `setScale()` for actual re-render
+1. `touchstart` (2 fingers) → record inter-finger distance (`pinchPrevDist`)
+2. `touchmove` → compute incremental ratio (`dist / pinchPrevDist`), quantize via `accumulateFactor()` to 1% steps, apply with `updateSizesOnly()` + `adjustScrollForZoom()` per frame. Layout changes on every touchmove via `--effective-scale` CSS variable — instant, no flicker
+3. `touchend` → reset gesture state → `setScale()` for final canvas re-render at the accumulated scale
 
 Browser zoom is prevented via `touch-action: pan-x pan-y` on `#viewport` and `touch-action: none` on `body`.
 
 ### Desktop zoom
 
-`wheel` event with `ctrlKey` on `#viewport`: debounced zoom with `updateSizesOnly()` during gesture → `setScale()` on timeout (200ms). Zoom center = viewport center.
+`wheel` event with `ctrlKey` on `#viewport`: zoom via `updateSizesOnly()` + `adjustScrollForZoom()` on each wheel event → `setScale()` on debounce timeout (200ms). Zoom center = cursor position in viewport.
 
 ### Rotation (0° ↔ 270°)
 
