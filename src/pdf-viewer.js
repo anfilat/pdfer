@@ -106,16 +106,6 @@ export class PdfViewer {
     }
   }
 
-  _getPageDisplaySize(pageIndex) {
-    const dim = this.pageDims[pageIndex];
-    const effectiveScale = this.baseScale * this.scale;
-    if (this.isHorizontal) {
-      // Rotated 270°: natural width becomes height, natural height becomes width
-      return { width: dim.height * effectiveScale, height: dim.width * effectiveScale };
-    }
-    return { width: dim.width * effectiveScale, height: dim.height * effectiveScale };
-  }
-
   /** Set --base-w/--base-h on each wrapper (called when baseScale or rotation changes) */
   _updateBaseDimensions() {
     for (let i = 0; i < this.numPages; i++) {
