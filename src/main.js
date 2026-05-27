@@ -85,7 +85,11 @@ async function openPdf(file) {
 
   // Persist file to OPFS (skip if loaded from OPFS — already saved there)
   if (!loadedFromOpfs) {
-    await savePdf(file);
+    try {
+      await savePdf(file);
+    } catch (err) {
+      console.error('Failed to persist PDF to OPFS:', err);
+    }
   }
   loadedFromOpfs = false;
 
