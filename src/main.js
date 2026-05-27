@@ -2,7 +2,7 @@
 
 import { PdfViewer } from './pdf-viewer.js';
 import { saveState, loadState } from './storage.js';
-import { savePdf, loadPdf } from './pdf-store.js';
+import { savePdf, loadPdf, clearPdf } from './pdf-store.js';
 
 // DOM elements
 const welcome = document.getElementById('welcome');
@@ -75,11 +75,19 @@ async function openPdf(file) {
   } catch (err) {
     console.error('Failed to open PDF:', err);
     alert('Failed to open PDF: ' + err.message);
+    // If this was auto-loaded from OPFS, clear it to prevent a startup error loop
+    if (loadedFromOpfs) {
+      await clearPdf();
+      loadedFromOpfs = false;
+    }
     return;
   }
 
-  // Persist file to OPFS so it can be reopened on next launch
-  await savePdf(file);
+  // Persist file to OPFS (skip if loaded from OPFS — already saved there)
+  if (!loadedFromOpfs) {
+    await savePdf(file);
+  }
+  loadedFromOpfs = false;
 
   // Restore saved state
   const saved = loadState(file);
@@ -347,12 +355,19 @@ if ('launchQueue' in window) {
 
 // ===================== Auto-load last PDF on startup =====================
 
+let loadedFromOpfs = false;
+
 (async () => {
   // Skip if the OS launched us with a specific file via file_handlers
   if (launchedWithFile) return;
 
-  const savedPdf = await loadPdf();
-  if (savedPdf) {
-    await openPdf(savedPdf);
+  try {
+    const savedPdf = await loadPdf();
+    if (savedPdf) {
+      loadedFromOpfs = true;
+      await openPdf(savedPdf);
+    }
+  } catch (e) {
+    console.error('Auto-load failed:', e);
   }
 })();
