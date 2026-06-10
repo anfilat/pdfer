@@ -10,7 +10,8 @@ const toolbar = document.getElementById('toolbar');
 const viewport = document.getElementById('viewport');
 const container = document.getElementById('pdf-container');
 const fileInput = document.getElementById('file-input');
-const filenameEl = document.getElementById('filename');
+const pageInput = document.getElementById('page-input');
+const pageTotal = document.getElementById('page-total');
 const btnOpenWelcome = document.getElementById('btn-open-welcome');
 const btnOpenToolbar = document.getElementById('btn-open-toolbar');
 const btnRotate = document.getElementById('btn-rotate');
@@ -72,6 +73,7 @@ async function openPdf(file) {
   rotation = 0;
   userScale = 1.0;
   scrollLock = false;
+  currentPage = 1;
   updateLockButton();
   updateRotateIcon();
 
@@ -79,8 +81,6 @@ async function openPdf(file) {
   welcome.style.display = 'none';
   toolbar.style.display = 'flex';
   viewport.style.display = 'block';
-  filenameEl.textContent = file.name;
-
   // Reset scroll
   viewport.scrollLeft = 0;
   viewport.scrollTop = 0;
@@ -93,6 +93,9 @@ async function openPdf(file) {
 
   try {
     await viewer.openFile(file);
+    pageTotal.textContent = viewer.numPages;
+    pageInput.value = 1;
+    currentPage = 1;
   } catch (err) {
     console.error('Failed to open PDF:', err);
     alert('Failed to open PDF: ' + err.message);
@@ -220,6 +223,20 @@ function clampScale(value) {
 
 // ===================== Scroll handler =====================
 
+// Track current page from scroll
+let currentPage = 1;
+
+function updateCurrentPage() {
+  if (!viewer.pdfDoc) return;
+  const page = viewer.getCenteredPageIndex() + 1;
+  if (page !== currentPage && page >= 1) {
+    currentPage = page;
+    if (document.activeElement !== pageInput) {
+      pageInput.value = currentPage;
+    }
+  }
+}
+
 viewport.addEventListener(
   'scroll',
   () => {
@@ -227,6 +244,7 @@ viewport.addEventListener(
     if (!isZooming) {
       viewer.onScroll();
     }
+    updateCurrentPage();
     scheduleSave();
   },
   { passive: true }
@@ -337,6 +355,42 @@ viewport.addEventListener('touchcancel', () => {
   isZooming = false;
   touchUnusedFactor = 1;
 });
+
+// ===================== Page navigation via input =====================
+
+pageInput.addEventListener('focus', () => {
+  pageInput.select();
+});
+
+pageInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    navigateToPage();
+  } else if (e.key === 'Escape') {
+    pageInput.value = currentPage;
+    pageInput.blur();
+  }
+});
+
+pageInput.addEventListener('blur', () => {
+  // Revert to current page if input is empty or invalid
+  const val = parseInt(pageInput.value, 10);
+  if (!val || val < 1 || val > viewer.numPages) {
+    pageInput.value = currentPage;
+  }
+});
+
+function navigateToPage() {
+  const val = parseInt(pageInput.value, 10);
+  if (val >= 1 && val <= viewer.numPages) {
+    currentPage = val;
+    viewer.scrollToPage(val - 1);
+    pageInput.blur();
+  } else {
+    pageInput.value = currentPage;
+    pageInput.blur();
+  }
+}
 
 // ===================== State persistence =====================
 

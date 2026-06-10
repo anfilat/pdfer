@@ -65,14 +65,39 @@
       padding: 0 8px;
       gap: 6px;
     }
-    #toolbar .filename {
+    #page-indicator {
       flex: 1;
-      font-size: 0.85rem;
-      color: #555;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      padding: 0 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      font-size: 0.9rem;
+      color: #333;
+      user-select: none;
+    }
+    #page-indicator input {
+      width: 36px;
+      text-align: center;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 2px 4px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      color: #333;
+      background: #fff;
+      -moz-appearance: textfield;
+    }
+    #page-indicator input::-webkit-inner-spin-button,
+    #page-indicator input::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    #page-indicator input:focus {
+      outline: none;
+      border-color: #666;
+    }
+    #page-indicator .total {
+      color: #888;
     }
     .tbtn {
       background: none;
@@ -164,7 +189,10 @@
       </svg>
     </button>
     <button class="tbtn" id="btn-lock" title="Lock horizontal scroll">🔒</button>
-    <span class="filename" id="filename"></span>
+    <div id="page-indicator">
+      <input type="number" id="page-input" min="1" value="1" />
+      <span class="total">/ <span id="page-total">0</span></span>
+    </div>
     <button class="tbtn" id="btn-open-toolbar" title="Open another file">📂</button>
   </div>
 
